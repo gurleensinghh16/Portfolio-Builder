@@ -40,7 +40,7 @@ function Home() {
           <div className="preview-content">
             <div className="preview-avatar"></div>
 
-            <h2>Alex Johnson</h2>
+            <h2>Gurleen Singh</h2>
 
             <p>Full Stack Developer</p>
 
