@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import ModernTemplate from "../templates/modern/ModernTemplate";
 import DeveloperTemplate from "../templates/developer/DeveloperTemplate";
 import MinimalTemplate from "../templates/minimal/MinimalTemplate";
+import { downloadPortfolio } from "../utils/downloadPortfolio";
 
 import type { PortfolioData } from "../types/portfolio";
 
@@ -37,7 +38,15 @@ function Preview() {
   }
 
   return (
+  <>
+    <div className="preview-actions">
+      <button onClick={downloadPortfolio}>
+        Download Source Code
+      </button>
+    </div>
+
     <div className="portfolio-preview-page">
+
       {selectedTemplate === "modern" && (
         <ModernTemplate data={portfolioData} />
       )}
@@ -49,8 +58,9 @@ function Preview() {
       {selectedTemplate === "minimal" && (
         <MinimalTemplate data={portfolioData} />
       )}
+
     </div>
-  );
-}
+  </>
+);
 
 export default Preview;
