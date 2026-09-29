@@ -587,3 +587,27 @@ body {
   color: #656a75;
   font-size: 13px;
 }
+
+
+
+.preview-actions {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.preview-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #7c5cff;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.preview-actions button:hover {
+  opacity: 0.9;
+}

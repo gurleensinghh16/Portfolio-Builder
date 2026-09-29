@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function TemplateShowcase() {
+  const navigate = useNavigate();
+
   return (
     <section className="templates-section" id="templates">
       <div className="section-heading center">
@@ -11,8 +15,8 @@ function TemplateShowcase() {
         </h2>
 
         <p className="section-description">
-          Start with a professionally designed template and
-          customize it with your own information.
+          Start with a professionally designed template and customize it with
+          your own information.
         </p>
       </div>
 
@@ -46,10 +50,13 @@ function TemplateShowcase() {
               <p>Clean & professional</p>
             </div>
 
-            <button>Get Started</button>
+            <button
+              onClick={() => navigate("/create?template=modern")}
+            >
+              Get Started
+            </button>
           </div>
         </div>
-
 
         {/* Template 2 */}
         <div className="template-card">
@@ -62,6 +69,7 @@ function TemplateShowcase() {
 
             <div className="terminal-content">
               <p>&gt; Hello, I'm Alex</p>
+
               <p className="terminal-purple">
                 Full Stack Developer
               </p>
@@ -82,10 +90,13 @@ function TemplateShowcase() {
               <p>Modern developer style</p>
             </div>
 
-            <button>Get Started</button>
+            <button
+              onClick={() => navigate("/create?template=developer")}
+            >
+              Get Started
+            </button>
           </div>
         </div>
-
 
         {/* Template 3 */}
         <div className="template-card">
@@ -111,7 +122,11 @@ function TemplateShowcase() {
               <p>Simple & elegant</p>
             </div>
 
-            <button>Get Started</button>
+            <button
+              onClick={() => navigate("/create?template=minimal")}
+            >
+              Get Started
+            </button>
           </div>
         </div>
 

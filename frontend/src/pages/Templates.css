@@ -1,0 +1,138 @@
+.templates-page {
+  min-height: 100vh;
+  padding: 120px 7% 80px;
+  background: #0b0d12;
+  color: #ffffff;
+}
+
+.templates-header {
+  max-width: 750px;
+  margin: 0 auto 60px;
+  text-align: center;
+}
+
+.templates-eyebrow {
+  margin-bottom: 14px;
+  color: #8b73ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.templates-header h1 {
+  margin: 0 0 18px;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.05;
+}
+
+.templates-header > p:last-child {
+  margin: 0;
+  color: #9699a6;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.templates-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.template-card {
+  overflow: hidden;
+  border: 1px solid #242733;
+  border-radius: 18px;
+  background: #11141b;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.template-card:hover {
+  transform: translateY(-6px);
+  border-color: #6c5ce7;
+}
+
+.template-preview {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #242733;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.template-preview.modern {
+  background: #f1efff;
+  color: #171522;
+}
+
+.template-preview.developer {
+  background: #0d1219;
+  color: #3ddc97;
+  font-family: monospace;
+}
+
+.template-preview.minimal {
+  background: #f7f6f2;
+  color: #151515;
+  font-family: Georgia, serif;
+}
+
+.template-card-content {
+  padding: 26px;
+}
+
+.template-card-content h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.template-card-content p {
+  min-height: 52px;
+  margin: 0 0 24px;
+  color: #9296a3;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.template-card-content button {
+  width: 100%;
+  padding: 12px 18px;
+  border: 1px solid #6c5ce7;
+  border-radius: 9px;
+  background: #6c5ce7;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.template-card-content button:hover {
+  background: #7b6bea;
+}
+
+@media (max-width: 900px) {
+  .templates-grid {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 600px) {
+  .templates-page {
+    padding: 100px 20px 60px;
+  }
+
+  .templates-header {
+    margin-bottom: 40px;
+  }
+
+  .template-preview {
+    height: 220px;
+  }
+}

@@ -1,35 +1,46 @@
-import MinimalTemplate from "./templates/minimal/MinimalTemplate";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
+import Home from "./components/Home";
+import About from "./components/about";
+import TemplateShowcase from "./components/templateshowcase";
+import HowItWorks from "./components/howitworks";
+import Footer from "./components/footer";
+import Preview from "./pages/preview";
+
+import Templates from "./pages/templates";
+import Create from "./pages/create";
+
+import "./App.css";
+
+function HomePage() {
+  return (
+    <div className="app">
+      <Navbar />
+      <Home />
+      <About />
+      <TemplateShowcase />
+      <HowItWorks />
+      <Footer />
+    </div>
+  );
+}
 
 function App() {
-  const portfolioData = {
-    name: "Gurleen Singh",
-    role: "Full Stack Developer",
-    bio: "I build modern web applications with clean interfaces and practical solutions.",
-    profileImage: "",
-    skills: ["React", "TypeScript", "Node.js", "MongoDB", "Git"],
-    projects: [
-      {
-        title: "Portfolio Builder",
-        description: "A platform that helps students create professional portfolios without building everything from scratch.",
-        technologies: ["React", "TypeScript", "Vite"],
-        link: "#",
-      },
-      {
-        title: "NIRIKSHAK AI",
-        description: "An AI-powered product inspection system for detecting declaration and compliance issues.",
-        technologies: ["React", "Node.js", "Python"],
-        link: "#",
-      },
-    ],
-    experience: [],
-    social: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/",
-      email: "gurleen@example.com",
-    },
-  };
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
 
-  return <MinimalTemplate data={portfolioData} />;
+        <Route path="/templates" element={<Templates />} />
+
+        {/* We'll create this page next */}
+        <Route path="/create" element={<Create />} />
+        
+        <Route path="/preview" element={<Preview />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

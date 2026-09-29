@@ -1,29 +1,5 @@
 import "./minimal.css";
-
-export interface PortfolioData {
-  name: string;
-  role: string;
-  bio: string;
-  profileImage?: string;
-  skills: string[];
-  projects: {
-    title: string;
-    description: string;
-    technologies: string[];
-    link?: string;
-  }[];
-  experience?: {
-    position: string;
-    company: string;
-    duration: string;
-    description: string;
-  }[];
-  social: {
-    github?: string;
-    linkedin?: string;
-    email?: string;
-  };
-}
+import type { PortfolioData } from "../../types/portfolio";
 
 interface Props {
   data: PortfolioData;
