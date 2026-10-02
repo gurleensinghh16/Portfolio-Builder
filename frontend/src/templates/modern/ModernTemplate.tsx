@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import "./modern.css";
 import type { PortfolioData } from "../../types/portfolio";
 
@@ -5,192 +7,397 @@ interface Props {
   data: PortfolioData;
 }
 
+/** True once, read from the browser's reduced-motion preference. */
+function usePrefersReducedMotion() {
+  return useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+}
+
+/** Fires `inView` the first time the attached element crosses the viewport. */
+function useReveal<T extends HTMLElement>(reduceMotion: boolean) {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(reduceMotion);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [reduceMotion]);
+
+  return { ref, inView };
+}
+
+/** Counts up to `value` once, respecting reduced motion. */
+function CountUp({ value, reduceMotion }: { value: number; reduceMotion: boolean }) {
+  const [display, setDisplay] = useState(reduceMotion ? value : 0);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setDisplay(value);
+      return;
+    }
+
+    let frame: number;
+    const duration = 650;
+    const start = performance.now();
+
+    function tick(now: number) {
+      const progress = Math.min((now - start) / duration, 1);
+      setDisplay(Math.round(progress * value));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    }
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, reduceMotion]);
+
+  return <>{display}</>;
+}
+
 export default function ModernTemplate({ data }: Props) {
+  const reduceMotion = usePrefersReducedMotion();
+
+  const initials = (data.name || "YN")
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const hasProjects = data.projects.length > 0;
+  const [featuredProject, ...restProjects] = data.projects;
+  const nameWords = (data.name || "Your Name").trim().split(/\s+/);
+  const roleText = data.role || "Your Role";
+
+  // ---- nav scroll state -------------------------------------------------
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ---- typewriter role ----------------------------------------------
+  const [typedRole, setTypedRole] = useState(reduceMotion ? roleText : "");
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setTypedRole(roleText);
+      return;
+    }
+
+    setTypedRole("");
+    let i = 0;
+    let interval: number;
+
+    const startDelay = window.setTimeout(() => {
+      interval = window.setInterval(() => {
+        i += 1;
+        setTypedRole(roleText.slice(0, i));
+        if (i >= roleText.length) window.clearInterval(interval);
+      }, 32);
+    }, 650);
+
+    return () => {
+      window.clearTimeout(startDelay);
+      window.clearInterval(interval);
+    };
+  }, [roleText, reduceMotion]);
+
+  // ---- scroll reveals -----------------------------------------------
+  const aboutReveal = useReveal<HTMLElement>(reduceMotion);
+  const projectsReveal = useReveal<HTMLElement>(reduceMotion);
+  const experienceReveal = useReveal<HTMLElement>(reduceMotion);
+  const educationReveal = useReveal<HTMLElement>(reduceMotion);
+  const contactReveal = useReveal<HTMLElement>(reduceMotion);
+
+  // ---- smooth, offset-aware anchor scrolling -------------------------
+  function scrollToSection(e: MouseEvent<HTMLAnchorElement>, id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    const offset = 88;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  // ---- magnetic button hover ------------------------------------------
+  function handleMagnetic(e: MouseEvent<HTMLAnchorElement>) {
+    if (reduceMotion) return;
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    el.style.transform = `translate(${x * 0.16}px, ${y * 0.35}px)`;
+  }
+
+  function resetMagnetic(e: MouseEvent<HTMLAnchorElement>) {
+    e.currentTarget.style.transform = "";
+  }
+
   return (
     <div className="modern-page">
 
       {/* NAVBAR */}
-      <header className="modern-nav">
+      <header className={`modern-nav${scrolled ? " is-scrolled" : ""}`}>
         <a href="#modern-home" className="modern-logo">
           {data.name || "Portfolio"}
         </a>
 
         <nav className="modern-nav-links">
-          <a href="#modern-home">Home</a>
-          <a href="#modern-about">About</a>
-          <a href="#modern-projects">Projects</a>
-          <a href="#modern-experience">Experience</a>
-          <a href="#modern-contact">Contact</a>
+          <a href="#modern-about" onClick={(e) => scrollToSection(e, "modern-about")}>
+            About
+          </a>
+          <a href="#modern-projects" onClick={(e) => scrollToSection(e, "modern-projects")}>
+            Work
+          </a>
+          <a href="#modern-experience" onClick={(e) => scrollToSection(e, "modern-experience")}>
+            Experience
+          </a>
+          <a href="#modern-contact" onClick={(e) => scrollToSection(e, "modern-contact")}>
+            Contact
+          </a>
         </nav>
 
-        <a href="#modern-contact" className="modern-nav-button">
-          Let's Talk
+        <a
+          href="#modern-contact"
+          className="modern-nav-cta"
+          onClick={(e) => scrollToSection(e, "modern-contact")}
+          onMouseMove={handleMagnetic}
+          onMouseLeave={resetMagnetic}
+        >
+          Get in touch
         </a>
       </header>
 
       <main>
 
         {/* HERO */}
-        <section className="modern-hero" id="modern-home">
-          <div className="modern-hero-content">
+        <section
+          className="modern-hero modern-wrap"
+          id="modern-home"
+        >
+          <div className="modern-hero-text">
 
-            <div className="modern-availability">
+            <p className="modern-hero-kicker">
               <span className="modern-status-dot"></span>
-              Available for opportunities
-            </div>
-
-            <p className="modern-eyebrow">
-              HELLO, I'M
+              Open to new projects
             </p>
 
-            <h1>
-              {data.name || "Your Name"}
+            <h1 className="modern-hero-name">
+              {nameWords.map((word, i) => (
+                <span
+                  className="modern-word-mask"
+                  key={`${word}-${i}`}
+                  style={{ "--i": i } as unknown as CSSProperties}
+                >
+                  <span className="modern-word">{word}</span>
+                </span>
+              ))}
             </h1>
 
-            <h2>
-              {data.role || "Your Role"}
-            </h2>
+            <p className="modern-hero-role">
+              {typedRole}
+              <span className="modern-caret"></span>
+            </p>
 
-            <p className="modern-hero-description">
+            <p className="modern-hero-bio">
               {data.bio ||
-                "I build modern digital experiences and practical solutions with clean, thoughtful design."}
+                "Write a short bio introducing who you are, what you build, and the kind of work you're looking for."}
             </p>
 
             <div className="modern-hero-actions">
-              <a href="#modern-projects" className="modern-primary-button">
-                View My Work
+              <a
+                href="#modern-projects"
+                className="modern-btn-primary"
+                onClick={(e) => scrollToSection(e, "modern-projects")}
+                onMouseMove={handleMagnetic}
+                onMouseLeave={resetMagnetic}
+              >
+                See the work
               </a>
 
               {data.social.email && (
                 <a
                   href={`mailto:${data.social.email}`}
-                  className="modern-secondary-button"
+                  className="modern-btn-ghost"
+                  onMouseMove={handleMagnetic}
+                  onMouseLeave={resetMagnetic}
                 >
-                  Contact Me
+                  Start a conversation
                 </a>
               )}
             </div>
 
-            <div className="modern-social-links">
-              {data.social.github && (
-                <a
-                  href={data.social.github}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  GitHub ↗
-                </a>
-              )}
+            {(data.projects.length > 0 || data.skills.length > 0) && (
+              <div className="modern-hero-meta">
+                {data.projects.length > 0 && (
+                  <div className="modern-stat">
+                    <b>
+                      <CountUp value={data.projects.length} reduceMotion={reduceMotion} />
+                    </b>
+                    <span>
+                      {data.projects.length === 1 ? "Project" : "Projects"}
+                    </span>
+                  </div>
+                )}
 
-              {data.social.linkedin && (
-                <a
-                  href={data.social.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  LinkedIn ↗
-                </a>
-              )}
+                {data.skills.length > 0 && (
+                  <div className="modern-stat">
+                    <b>
+                      <CountUp value={data.skills.length} reduceMotion={reduceMotion} />
+                    </b>
+                    <span>Core skills</span>
+                  </div>
+                )}
 
-              {data.social.email && (
-                <a href={`mailto:${data.social.email}`}>
-                  Email ↗
-                </a>
-              )}
-            </div>
+                {data.experience.length > 0 && (
+                  <div className="modern-stat">
+                    <b>
+                      <CountUp value={data.experience.length} reduceMotion={reduceMotion} />
+                    </b>
+                    <span>
+                      {data.experience.length === 1 ? "Role" : "Roles"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="modern-hero-visual">
-            {data.profileImage ? (
-              <div className="modern-image-frame">
-                <img
-                  src={data.profileImage}
-                  alt={data.name}
-                />
-              </div>
-            ) : (
-              <div className="modern-image-placeholder">
-                <span>
-                  {(data.name || "YN")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </span>
-              </div>
-            )}
+            <div className="modern-portrait-backdrop"></div>
 
-            <div className="modern-floating-card">
-              <span>01</span>
-              <p>Creative<br />Developer</p>
+            <div className="modern-portrait">
+              {data.profileImage ? (
+                <img src={data.profileImage} alt={data.name} />
+              ) : (
+                <div className="modern-portrait-fallback">
+                  <span>{initials}</span>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         {/* ABOUT */}
         <section
-          className="modern-section modern-about"
+          ref={aboutReveal.ref}
+          className={`modern-about modern-wrap${aboutReveal.inView ? " is-in" : ""}`}
           id="modern-about"
         >
-          <div className="modern-section-heading">
-            <span>01</span>
-            <p>ABOUT ME</p>
+          <div className="modern-about-grid">
+            <p className="modern-label">About</p>
+
+            <p className="modern-about-bio">
+              {data.bio ||
+                "Tell visitors who you are, what you've built, and what you're looking for next."}
+            </p>
           </div>
 
-          <div className="modern-about-content">
-
-            <div className="modern-about-title">
-              <h2>
-                Building digital
-                <span>experiences that matter.</span>
-              </h2>
-            </div>
-
-            <div className="modern-about-text">
-              <p>
-                {data.bio ||
-                  "Tell visitors about yourself, your interests and the type of work you enjoy creating."}
-              </p>
+          {data.skills.length > 0 && (
+            <div className="modern-skills-block">
+              <p className="modern-label">Skills</p>
 
               <div className="modern-skills">
-                {data.skills.map((skill) => (
-                  <span key={skill}>
+                {data.skills.map((skill, i) => (
+                  <span key={skill} style={{ "--i": i } as unknown as CSSProperties}>
                     {skill}
                   </span>
                 ))}
               </div>
             </div>
-
-          </div>
+          )}
         </section>
 
         {/* PROJECTS */}
         <section
-          className="modern-section modern-projects"
+          ref={projectsReveal.ref}
+          className={`modern-projects modern-wrap${projectsReveal.inView ? " is-in" : ""}`}
           id="modern-projects"
         >
-          <div className="modern-section-heading">
-            <span>02</span>
-            <p>SELECTED PROJECTS</p>
+          <div className="modern-section-head">
+            <h2>Selected work</h2>
+            <p className="modern-label">
+              {hasProjects
+                ? `${data.projects.length} total`
+                : ""}
+            </p>
           </div>
 
-          <div className="modern-project-grid">
+          {hasProjects ? (
+            <>
+              <article className="modern-featured-project">
+                <div>
+                  <span className="modern-featured-tag">
+                    Featured
+                  </span>
 
-            {data.projects.length > 0 ? (
-              data.projects.map((project, index) => (
-                <article
-                  className="modern-project-card"
-                  key={`${project.title}-${index}`}
-                >
+                  <h3>{featuredProject.title}</h3>
 
-                  <div className="modern-project-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
+                  <p>{featuredProject.description}</p>
 
-                  <div className="modern-project-content">
+                  {featuredProject.technologies.length > 0 && (
+                    <div className="modern-project-tech">
+                      {featuredProject.technologies.map((tech) => (
+                        <span key={tech}>{tech}</span>
+                      ))}
+                    </div>
+                  )}
 
-                    <div className="modern-project-top">
-                      <span>PROJECT</span>
+                  {featuredProject.link && (
+                    <a
+                      href={featuredProject.link}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View project ↗
+                    </a>
+                  )}
+                </div>
+              </article>
 
-                      {project.link && (
+              {restProjects.length > 0 && (
+                <div className="modern-project-list">
+                  {restProjects.map((project, index) => (
+                    <article
+                      className="modern-project-row"
+                      key={`${project.title}-${index}`}
+                      style={{ "--i": index + 1 } as unknown as CSSProperties}
+                    >
+                      <h3>{project.title}</h3>
+
+                      <div>
+                        <p>{project.description}</p>
+
+                        {project.technologies.length > 0 && (
+                          <div className="modern-project-tech">
+                            {project.technologies.map((tech) => (
+                              <span key={tech}>{tech}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {project.link ? (
                         <a
                           href={project.link}
                           target="_blank"
@@ -198,164 +405,134 @@ export default function ModernTemplate({ data }: Props) {
                         >
                           View ↗
                         </a>
+                      ) : (
+                        <span></span>
                       )}
-                    </div>
-
-                    <h3>
-                      {project.title}
-                    </h3>
-
-                    <p>
-                      {project.description}
-                    </p>
-
-                    <div className="modern-project-tech">
-                      {project.technologies.map((technology) => (
-                        <span key={technology}>
-                          {technology}
-                        </span>
-                      ))}
-                    </div>
-
-                  </div>
-                </article>
-              ))
-            ) : (
-              <p className="modern-empty">
-                Projects will appear here.
-              </p>
-            )}
-
-          </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="modern-empty">
+              Add a project to feature your work here.
+            </p>
+          )}
         </section>
 
         {/* EXPERIENCE */}
         {data.experience.length > 0 && (
           <section
-            className="modern-section modern-experience"
+            ref={experienceReveal.ref}
+            className={`modern-experience modern-wrap${experienceReveal.inView ? " is-in" : ""}`}
             id="modern-experience"
           >
-            <div className="modern-section-heading">
-              <span>03</span>
-              <p>EXPERIENCE</p>
+            <div className="modern-section-head">
+              <h2>Experience</h2>
             </div>
 
-            <div className="modern-experience-list">
-
+            <div className="modern-timeline">
               {data.experience.map((item, index) => (
                 <article
-                  className="modern-experience-item"
+                  className="modern-timeline-item"
                   key={`${item.company}-${index}`}
+                  style={{ "--i": index } as unknown as CSSProperties}
                 >
+                  <span className="modern-timeline-dot"></span>
 
-                  <div className="modern-experience-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-
-                  <div className="modern-experience-main">
+                  <div className="modern-timeline-head">
                     <div>
                       <h3>{item.position}</h3>
-                      <p className="modern-company">
-                        {item.company}
-                      </p>
+                      <p className="modern-company">{item.company}</p>
                     </div>
 
-                    <span className="modern-duration">
+                    <span className="modern-timeline-duration">
                       {item.duration}
                     </span>
-
-                    <p className="modern-experience-description">
-                      {item.description}
-                    </p>
                   </div>
 
+                  <p>{item.description}</p>
                 </article>
               ))}
-
             </div>
           </section>
         )}
 
         {/* EDUCATION */}
         {data.education.length > 0 && (
-          <section className="modern-section modern-education">
-
-            <div className="modern-section-heading">
-              <span>04</span>
-              <p>EDUCATION</p>
+          <section
+            ref={educationReveal.ref}
+            className={`modern-education modern-wrap${educationReveal.inView ? " is-in" : ""}`}
+            id="modern-education"
+          >
+            <div className="modern-section-head">
+              <h2>Education</h2>
             </div>
 
             <div className="modern-education-list">
-
               {data.education.map((item, index) => (
                 <article
-                  className="modern-education-item"
+                  className="modern-education-row"
                   key={`${item.institution}-${index}`}
+                  style={{ "--i": index } as unknown as CSSProperties}
                 >
-
                   <div>
                     <h3>{item.degree}</h3>
                     <p>{item.institution}</p>
                   </div>
 
-                  <span>{item.year}</span>
-
+                  <span className="modern-education-year">
+                    {item.year}
+                  </span>
                 </article>
               ))}
-
             </div>
           </section>
         )}
 
         {/* CONTACT */}
         <section
-          className="modern-contact"
+          ref={contactReveal.ref}
+          className={`modern-contact${contactReveal.inView ? " is-in" : ""}`}
           id="modern-contact"
         >
-          <div className="modern-contact-inner">
+          <div className="modern-wrap modern-contact-inner">
+            <p className="modern-label">Get in touch</p>
 
-            <p className="modern-eyebrow">
-              LET'S CONNECT
-            </p>
-
-            <h2>
-              Have an idea?
-              <span>Let's build it.</span>
-            </h2>
+            <h2>Let's build something worth shipping.</h2>
 
             {data.social.email && (
               <a
                 href={`mailto:${data.social.email}`}
                 className="modern-contact-email"
               >
-                {data.social.email} ↗
+                {data.social.email}
               </a>
             )}
 
-            <div className="modern-contact-socials">
+            {(data.social.github || data.social.linkedin) && (
+              <div className="modern-contact-socials">
+                {data.social.github && (
+                  <a
+                    href={data.social.github}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    GitHub
+                  </a>
+                )}
 
-              {data.social.github && (
-                <a
-                  href={data.social.github}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  GitHub
-                </a>
-              )}
-
-              {data.social.linkedin && (
-                <a
-                  href={data.social.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  LinkedIn
-                </a>
-              )}
-
-            </div>
-
+                {data.social.linkedin && (
+                  <a
+                    href={data.social.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    LinkedIn
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
@@ -363,16 +540,11 @@ export default function ModernTemplate({ data }: Props) {
 
       {/* FOOTER */}
       <footer className="modern-footer">
-
         <span>
-          © {new Date().getFullYear()}{" "}
-          {data.name || "Portfolio"}
+          © {new Date().getFullYear()} {data.name || "Portfolio"}
         </span>
 
-        <span>
-          Built with FolioBuilder
-        </span>
-
+        <span>Built with FolioBuilder</span>
       </footer>
 
     </div>

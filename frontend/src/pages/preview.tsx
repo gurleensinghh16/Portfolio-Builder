@@ -27,7 +27,6 @@ function Preview() {
     }
   }, []);
 
-  // If no portfolio data is found
   if (!portfolioData) {
     return (
       <div className="preview-loading">
@@ -38,29 +37,28 @@ function Preview() {
   }
 
   return (
-  <>
-    <div className="preview-actions">
-      <button onClick={downloadPortfolio}>
-        Download Source Code
-      </button>
-    </div>
+    <>
+      <div className="preview-actions">
+        <button onClick={downloadPortfolio}>
+          Download Source Code
+        </button>
+      </div>
 
-    <div className="portfolio-preview-page">
+      <div className="portfolio-preview-page">
+        {selectedTemplate === "modern" && (
+          <ModernTemplate data={portfolioData} />
+        )}
 
-      {selectedTemplate === "modern" && (
-        <ModernTemplate data={portfolioData} />
-      )}
+        {selectedTemplate === "developer" && (
+          <DeveloperTemplate data={portfolioData} />
+        )}
 
-      {selectedTemplate === "developer" && (
-        <DeveloperTemplate data={portfolioData} />
-      )}
-
-      {selectedTemplate === "minimal" && (
-        <MinimalTemplate data={portfolioData} />
-      )}
-
-    </div>
-  </>
-);
+        {selectedTemplate === "minimal" && (
+          <MinimalTemplate data={portfolioData} />
+        )}
+      </div>
+    </>
+  );
+}
 
 export default Preview;
