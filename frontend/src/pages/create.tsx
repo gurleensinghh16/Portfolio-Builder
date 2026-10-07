@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./create.css";
+import { supabase } from '../lib/supabase'
 
 interface Project {
   title: string;

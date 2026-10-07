@@ -7,6 +7,9 @@ interface Props {
   data: PortfolioData;
 }
 
+/** CSSProperties plus the custom `--i` stagger-index variable. */
+type StaggerStyle = CSSProperties & { "--i"?: number };
+
 /** True once, read from the browser's reduced-motion preference. */
 function usePrefersReducedMotion() {
   return useMemo(() => {
@@ -44,13 +47,10 @@ function useReveal<T extends HTMLElement>(reduceMotion: boolean) {
 
 /** Counts up to `value` once, respecting reduced motion. */
 function CountUp({ value, reduceMotion }: { value: number; reduceMotion: boolean }) {
-  const [display, setDisplay] = useState(reduceMotion ? value : 0);
+  const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (reduceMotion) {
-      setDisplay(value);
-      return;
-    }
+    if (reduceMotion) return;
 
     let frame: number;
     const duration = 650;
@@ -66,7 +66,7 @@ function CountUp({ value, reduceMotion }: { value: number; reduceMotion: boolean
     return () => cancelAnimationFrame(frame);
   }, [value, reduceMotion]);
 
-  return <>{display}</>;
+  return <>{reduceMotion ? value : display}</>;
 }
 
 export default function ModernTemplate({ data }: Props) {
@@ -86,23 +86,21 @@ export default function ModernTemplate({ data }: Props) {
   const roleText = data.role || "Your Role";
 
   // ---- nav scroll state -------------------------------------------------
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(
+    () => typeof window !== "undefined" && window.scrollY > 8
+  );
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // ---- typewriter role ----------------------------------------------
-  const [typedRole, setTypedRole] = useState(reduceMotion ? roleText : "");
+  const [typedRole, setTypedRole] = useState("");
 
   useEffect(() => {
-    if (reduceMotion) {
-      setTypedRole(roleText);
-      return;
-    }
+    if (reduceMotion) return;
 
     setTypedRole("");
     let i = 0;
@@ -122,12 +120,19 @@ export default function ModernTemplate({ data }: Props) {
     };
   }, [roleText, reduceMotion]);
 
+  const displayedRole = reduceMotion ? roleText : typedRole;
+
   // ---- scroll reveals -----------------------------------------------
-  const aboutReveal = useReveal<HTMLElement>(reduceMotion);
-  const projectsReveal = useReveal<HTMLElement>(reduceMotion);
-  const experienceReveal = useReveal<HTMLElement>(reduceMotion);
-  const educationReveal = useReveal<HTMLElement>(reduceMotion);
-  const contactReveal = useReveal<HTMLElement>(reduceMotion);
+  const { ref: aboutRef, inView: aboutInView } =
+    useReveal<HTMLElement>(reduceMotion);
+  const { ref: projectsRef, inView: projectsInView } =
+    useReveal<HTMLElement>(reduceMotion);
+  const { ref: experienceRef, inView: experienceInView } =
+    useReveal<HTMLElement>(reduceMotion);
+  const { ref: educationRef, inView: educationInView } =
+    useReveal<HTMLElement>(reduceMotion);
+  const { ref: contactRef, inView: contactInView } =
+    useReveal<HTMLElement>(reduceMotion);
 
   // ---- smooth, offset-aware anchor scrolling -------------------------
   function scrollToSection(e: MouseEvent<HTMLAnchorElement>, id: string) {
@@ -207,7 +212,7 @@ export default function ModernTemplate({ data }: Props) {
                 <span
                   className="modern-word-mask"
                   key={`${word}-${i}`}
-                  style={{ "--i": i } as unknown as CSSProperties}
+                  style={{ "--i": i } as StaggerStyle}
                 >
                   <span className="modern-word">{word}</span>
                 </span>
@@ -215,7 +220,7 @@ export default function ModernTemplate({ data }: Props) {
             </h1>
 
             <p className="modern-hero-role">
-              {typedRole}
+              {displayedRole}
               <span className="modern-caret"></span>
             </p>
 
@@ -300,8 +305,8 @@ export default function ModernTemplate({ data }: Props) {
 
         {/* ABOUT */}
         <section
-          ref={aboutReveal.ref}
-          className={`modern-about modern-wrap${aboutReveal.inView ? " is-in" : ""}`}
+          ref={aboutRef}
+          className={`modern-about modern-wrap${aboutInView ? " is-in" : ""}`}
           id="modern-about"
         >
           <div className="modern-about-grid">
@@ -319,7 +324,7 @@ export default function ModernTemplate({ data }: Props) {
 
               <div className="modern-skills">
                 {data.skills.map((skill, i) => (
-                  <span key={skill} style={{ "--i": i } as unknown as CSSProperties}>
+                  <span key={skill} style={{ "--i": i } as StaggerStyle}>
                     {skill}
                   </span>
                 ))}
@@ -330,8 +335,8 @@ export default function ModernTemplate({ data }: Props) {
 
         {/* PROJECTS */}
         <section
-          ref={projectsReveal.ref}
-          className={`modern-projects modern-wrap${projectsReveal.inView ? " is-in" : ""}`}
+          ref={projectsRef}
+          className={`modern-projects modern-wrap${projectsInView ? " is-in" : ""}`}
           id="modern-projects"
         >
           <div className="modern-section-head">
@@ -343,7 +348,7 @@ export default function ModernTemplate({ data }: Props) {
             </p>
           </div>
 
-          {hasProjects ? (
+          {hasProjects && featuredProject ? (
             <>
               <article className="modern-featured-project">
                 <div>
@@ -381,7 +386,7 @@ export default function ModernTemplate({ data }: Props) {
                     <article
                       className="modern-project-row"
                       key={`${project.title}-${index}`}
-                      style={{ "--i": index + 1 } as unknown as CSSProperties}
+                      style={{ "--i": index + 1 } as StaggerStyle}
                     >
                       <h3>{project.title}</h3>
 
@@ -423,8 +428,8 @@ export default function ModernTemplate({ data }: Props) {
         {/* EXPERIENCE */}
         {data.experience.length > 0 && (
           <section
-            ref={experienceReveal.ref}
-            className={`modern-experience modern-wrap${experienceReveal.inView ? " is-in" : ""}`}
+            ref={experienceRef}
+            className={`modern-experience modern-wrap${experienceInView ? " is-in" : ""}`}
             id="modern-experience"
           >
             <div className="modern-section-head">
@@ -436,7 +441,7 @@ export default function ModernTemplate({ data }: Props) {
                 <article
                   className="modern-timeline-item"
                   key={`${item.company}-${index}`}
-                  style={{ "--i": index } as unknown as CSSProperties}
+                  style={{ "--i": index } as StaggerStyle}
                 >
                   <span className="modern-timeline-dot"></span>
 
@@ -461,8 +466,8 @@ export default function ModernTemplate({ data }: Props) {
         {/* EDUCATION */}
         {data.education.length > 0 && (
           <section
-            ref={educationReveal.ref}
-            className={`modern-education modern-wrap${educationReveal.inView ? " is-in" : ""}`}
+            ref={educationRef}
+            className={`modern-education modern-wrap${educationInView ? " is-in" : ""}`}
             id="modern-education"
           >
             <div className="modern-section-head">
@@ -474,7 +479,7 @@ export default function ModernTemplate({ data }: Props) {
                 <article
                   className="modern-education-row"
                   key={`${item.institution}-${index}`}
-                  style={{ "--i": index } as unknown as CSSProperties}
+                  style={{ "--i": index } as StaggerStyle}
                 >
                   <div>
                     <h3>{item.degree}</h3>
@@ -492,8 +497,8 @@ export default function ModernTemplate({ data }: Props) {
 
         {/* CONTACT */}
         <section
-          ref={contactReveal.ref}
-          className={`modern-contact${contactReveal.inView ? " is-in" : ""}`}
+          ref={contactRef}
+          className={`modern-contact${contactInView ? " is-in" : ""}`}
           id="modern-contact"
         >
           <div className="modern-wrap modern-contact-inner">

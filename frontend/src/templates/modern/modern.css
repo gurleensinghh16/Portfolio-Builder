@@ -138,6 +138,12 @@
   border-bottom-color: var(--violet);
 }
 
+.modern-nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .modern-nav-cta {
   display: inline-flex;
   align-items: center;
@@ -160,12 +166,32 @@
    ========================================================================== */
 
 .modern-hero {
+  position: relative;
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 4rem;
   align-items: center;
   padding-top: 5.5rem;
   padding-bottom: 6rem;
+}
+
+.modern-hero-glow {
+  position: absolute;
+  inset: -15% -5%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    480px circle at var(--mx, 50%) var(--my, 30%),
+    rgba(90, 50, 251, 0.14),
+    transparent 70%
+  );
+  transition: background 0.1s linear;
+}
+
+.modern-hero-text,
+.modern-hero-visual {
+  position: relative;
+  z-index: 1;
 }
 
 .modern-hero-kicker {
@@ -352,11 +378,8 @@
   background: var(--ink);
   border: 1px solid rgba(20, 15, 31, 0.08);
   transform: rotate(-2deg);
-  transition: transform 0.4s var(--ease);
-}
-
-.modern-hero-visual:hover .modern-portrait {
-  transform: rotate(0deg);
+  transition: transform 0.15s ease-out;
+  will-change: transform;
 }
 
 .modern-portrait img {
@@ -498,13 +521,23 @@
   margin-bottom: 3rem;
   border-bottom: 1px solid var(--line);
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+  cursor: pointer;
+  transition: opacity 0.65s var(--ease), transform 0.15s ease-out,
+              box-shadow 0.2s var(--ease);
+  will-change: transform;
 }
 
 .modern-projects.is-in .modern-featured-project {
   opacity: 1;
-  transform: translateY(0);
+}
+
+.modern-featured-project:hover {
+  box-shadow: 0 24px 60px rgba(20, 15, 31, 0.1);
+}
+
+.modern-featured-project:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 6px;
 }
 
 .modern-featured-project h3 {
@@ -575,11 +608,17 @@
   align-items: start;
   padding: 1.75rem 0;
   border-bottom: 1px solid var(--line);
+  cursor: pointer;
   opacity: 0;
   transform: translateY(18px);
   transition: background 0.2s var(--ease), opacity 0.55s var(--ease),
               transform 0.55s var(--ease);
   transition-delay: calc(var(--i, 0) * 0.07s);
+}
+
+.modern-project-row:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 4px;
 }
 
 .modern-projects.is-in .modern-project-row {
@@ -620,6 +659,38 @@
   font-size: var(--step-0);
   color: var(--muted);
   padding: 2rem 0;
+}
+
+.modern-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.modern-filter-row button {
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), color 0.2s var(--ease),
+              background 0.2s var(--ease);
+}
+
+.modern-filter-row button:hover {
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.modern-filter-row button.is-active {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
 }
 
 /* ==========================================================================
