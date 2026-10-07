@@ -90,16 +90,16 @@ function Create() {
   // PROFILE IMAGE
   // -------------------------
 
-  const handleImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-    if (!file) return;
-
-    const imageUrl = URL.createObjectURL(file);
-    setProfileImage(imageUrl);
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    setProfileImage(reader.result as string); // base64 string — persists in Supabase
   };
+  reader.readAsDataURL(file);
+};
 
   // -------------------------
   // SKILLS
@@ -246,57 +246,57 @@ function Create() {
   // -------------------------
   // COMPLETE PORTFOLIO DATA
   // -------------------------
-
-  const portfolioData = {
-    name,
-    role,
-    bio,
-    profileImage,
-
-    skills,
-
-    projects: projects.map((project) => ({
-  ...project,
-  technologies: project.technologies
-    .flatMap((technology) =>
-      technology
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    ),
-})),
-
-    education,
-
-    experience,
-
-    social: {
-      github,
-      linkedin,
-      email,
-    },
-  };
-
   // -------------------------
   // CREATE PORTFOLIO
   // -------------------------
 
-  const handleCreatePortfolio = () => {
-  console.log("Selected Template:", selectedTemplate);
-  console.log("Portfolio Data:", portfolioData);
+  const handleCreatePortfolio = async () => {
+  const builtData = {
+    name,
+    role,
+    bio,
+    profileImage,
+    skills,
+    projects: projects.map((project) => ({
+      ...project,
+      technologies: project.technologies
+        .flatMap((t) => t.split(',').map((i) => i.trim()).filter(Boolean))
+    })),
+    education,
+    experience,
+    social: { github, linkedin, email }
+  }
 
-  localStorage.setItem(
-    "portfolioData",
-    JSON.stringify(portfolioData)
-  );
+  // Keep existing localStorage behaviour (preview page reads from here)
+  localStorage.setItem('portfolioData', JSON.stringify(builtData))
+  localStorage.setItem('selectedTemplate', selectedTemplate)
 
-  localStorage.setItem(
-    "selectedTemplate",
-    selectedTemplate
-  );
+  // Save to Supabase if user is logged in
+  const { data: { user } } = await supabase.auth.getUser()
 
-  navigate("/preview");
-};
+  if (user) {
+    const { error } = await supabase
+      .from('portfolios')
+      .upsert({
+        user_id:           user.id,
+        name,
+        role,
+        bio,
+        profile_image:     profileImage,
+        selected_template: selectedTemplate,
+        skills,
+        projects:          builtData.projects,
+        education,
+        experience,
+        social:            { github, linkedin, email },
+        updated_at:        new Date().toISOString()
+      }, { onConflict: 'user_id' })
+
+    if (error) console.error('Supabase save failed:', error.message)
+  }
+
+  navigate('/preview')
+}
 
   return (
     <div className="create-page">
