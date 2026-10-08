@@ -1,6 +1,8 @@
+import type { CSSProperties } from "react";
 import { scrollToId } from "../utils/scroll";
 import { useScrollReveal } from "../utils/useScrollReveal";
-import { delay } from "../utils/animation";
+
+const delay = (s: number) => ({ "--delay": `${s}s` }) as CSSProperties;
 
 function Home() {
   useScrollReveal();
@@ -26,7 +28,6 @@ function Home() {
 
         <div className="hero-buttons fade-up" style={delay(0.55)}>
           <button
-            type="button"
             className="primary-button"
             onClick={() => scrollToId("templates")}
           >
@@ -34,7 +35,6 @@ function Home() {
           </button>
 
           <button
-            type="button"
             className="secondary-button"
             onClick={() => scrollToId("how-it-works")}
           >
@@ -43,8 +43,28 @@ function Home() {
         </div>
       </div>
 
-      <div className="hero-preview fade-up" style={delay(0.45)} aria-hidden="true">
-        {/* ...preview-window markup unchanged... */}
+      <div className="hero-preview fade-up" style={delay(0.45)}>
+        <div className="preview-window">
+          <div className="window-top">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div className="preview-content">
+            <div className="preview-avatar"></div>
+            <h2>Gurleen Singh</h2>
+            <p>Full Stack Developer</p>
+            <div className="preview-line"></div>
+            <div className="preview-small-line"></div>
+            <div className="preview-small-line"></div>
+            <div className="preview-skills">
+              <span>React</span>
+              <span>Node.js</span>
+              <span>MongoDB</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
