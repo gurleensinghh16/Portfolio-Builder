@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { delay } from "../utils/animation";
 
 function TemplateShowcase() {
   const navigate = useNavigate();
 
   return (
     <section className="templates-section" id="templates">
-      <div className="section-heading center">
+      <div className="section-heading center reveal">
         <p className="hero-label">PORTFOLIO TEMPLATES</p>
 
         <h2>
@@ -23,7 +24,7 @@ function TemplateShowcase() {
       <div className="template-grid">
 
         {/* Template 1 */}
-        <div className="template-card">
+        <div className="template-card reveal" style={delay(0.1)}> 
           <div className="template-preview modern-preview">
             <div className="mini-navbar"></div>
 
@@ -59,7 +60,7 @@ function TemplateShowcase() {
         </div>
 
         {/* Template 2 */}
-        <div className="template-card">
+        <div className="template-card reveal"style={delay(0.25)}>
           <div className="template-preview developer-preview">
             <div className="terminal-top">
               <span></span>
@@ -99,7 +100,7 @@ function TemplateShowcase() {
         </div>
 
         {/* Template 3 */}
-        <div className="template-card">
+        <div className="template-card reveal"style={delay(0.4)}>
           <div className="template-preview minimal-preview">
             <div className="minimal-content">
               <h4>Alex Johnson</h4>
